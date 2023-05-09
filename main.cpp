@@ -40,6 +40,31 @@ double frequency_test(const std::bitset<128>& sequence) {
     return p_value;
 }
 
+double consecutive_bits_test(const std::bitset<128>& sequence) {
+    size_t consecutive_count = 0;
+    size_t single_count = 0;
+
+    for (size_t i = 0; i < sequence.size(); ++i) {
+        if (sequence[i]) {
+            ++single_count;
+            if (i == 0 || !sequence[i - 1])
+                ++consecutive_count;
+        }
+        else
+            if (i == 0 || sequence[i - 1])
+                ++consecutive_count;
+    }
+
+    double thau = static_cast<double>(single_count) / sequence.size();
+    double tmp = 2.0 / std::sqrt(sequence.size());
+    if (std::abs(thau - 0.5) >= tmp) {
+        return 0.0;
+    }
+
+    double expr = (consecutive_count - (2.0 * sequence.size() * thau * (1.0 - thau))) / std::sqrt(2.0 * sequence.size() * thau * (1.0 - thau));
+    double p_value = std::erfc(std::abs(expr) / std::sqrt(2.0));
+    return p_value;
+}
 
 int main() {
     size_t sequence_count = 5;
@@ -50,8 +75,10 @@ int main() {
         std::cout << "Sequence " << (i + 1) << ":\n" << sequence << std::endl;
 
         double test_a = frequency_test(sequence);
+        double test_b = consecutive_bits_test(sequence);
         
-        std::cout << "a) Frequency bitwise test: p_value = " << test_a << "\n" << std::endl;
+        std::cout << "a) Frequency bitwise test: p_value = " << test_a << std::endl;
+        std::cout << "b) Identical consecutive bits test: p_value = " << test_b << "\n" << std::endl;
     }
 
     return 0;
