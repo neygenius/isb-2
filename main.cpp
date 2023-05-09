@@ -2,6 +2,7 @@
 #include <bitset>
 #include <random>
 #include <iostream>
+#include <cmath>
 
 std::vector<std::bitset<128>> rand_gen_sequences(size_t count) {
     std::random_device rd;
@@ -63,6 +64,38 @@ double consecutive_bits_test(const std::bitset<128>& sequence) {
 
     double expr = (consecutive_count - (2.0 * sequence.size() * thau * (1.0 - thau))) / std::sqrt(2.0 * sequence.size() * thau * (1.0 - thau));
     double p_value = std::erfc(std::abs(expr) / std::sqrt(2.0));
+    
+    return p_value;
+}
+
+double longest_sequence_ones(const std::bitset<128>& sequence) {
+    int n = sequence.size();
+    int m = 8;
+
+    std::vector<int> counts(6, 0);
+    int consecutive_ones = 0;
+
+    for (size_t i = 0; i < sequence.size(); ++i) {
+        if (sequence[i]) {
+            consecutive_ones++;
+            if (i == sequence.size() - 1 && consecutive_ones >= 1 && consecutive_ones <= 5)
+                counts[consecutive_ones - 1]++;
+        }
+        else {
+            if (consecutive_ones >= 1 && consecutive_ones <= 5)
+                counts[consecutive_ones - 1]++;
+            consecutive_ones = 0;
+        }
+    }
+
+    std::vector<double> pi = { 0.2148, 0.3672, 0.2305, 0.1875 };
+    double expr = 0.0;
+
+    for (int i = 0; i < 4; ++i) {
+        expr += std::pow((counts[i] - n * pi[i] / m), 2) / (n * pi[i] / m);
+    }
+    double p_value = std::exp(-expr / 2);
+
     return p_value;
 }
 
@@ -76,9 +109,11 @@ int main() {
 
         double test_a = frequency_test(sequence);
         double test_b = consecutive_bits_test(sequence);
+        double test_c = longest_sequence_ones(sequence);
         
         std::cout << "a) Frequency bitwise test: p_value = " << test_a << std::endl;
-        std::cout << "b) Identical consecutive bits test: p_value = " << test_b << "\n" << std::endl;
+        std::cout << "b) Identical consecutive bits test: p_value = " << test_b << std::endl;
+        std::cout << "c) Longest sequence of ones in a block test: p_value = " << test_c << "\n" << std::endl;
     }
 
     return 0;
